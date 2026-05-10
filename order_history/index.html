@@ -1615,10 +1615,14 @@ function buildBookingRangeVisualMap(monthStart, monthEnd) {
         : (entry.checkoutDateDome2 || entry.checkoutDate || "");
       if (!checkOut || checkOut <= checkIn) return;
 
+      const rawName = domeKey === "dome1" ? entry.dome1Name : entry.dome2Name;
+      const label = rawName && rawName.trim() ? rawName.trim() : `${domeKey === "dome1" ? "Dome 1 booked" : "Dome 2 booked"}`;
+
       let cursor = checkIn;
       while (cursor < checkOut) {
         if (cursor >= startBound && cursor <= endBound) {
           if (!visual[domeKey][cursor]) visual[domeKey][cursor] = [];
+
           const nextDay = addDaysYMD(cursor, 1);
           const isStart = cursor === checkIn;
           const isEndNight = nextDay === checkOut;
@@ -1626,7 +1630,7 @@ function buildBookingRangeVisualMap(monthStart, monthEnd) {
           if (isStart && isEndNight) seg = "single";
           else if (isStart) seg = "start";
           else if (isEndNight) seg = "end";
-          visual[domeKey][cursor].push(seg);
+          visual[domeKey][cursor].push({ seg, label });
         }
         cursor = addDaysYMD(cursor, 1);
         if (!cursor) break;
@@ -1634,7 +1638,7 @@ function buildBookingRangeVisualMap(monthStart, monthEnd) {
 
       if (checkOut >= startBound && checkOut <= endBound) {
         if (!visual[domeKey][checkOut]) visual[domeKey][checkOut] = [];
-        visual[domeKey][checkOut].push("half");
+        visual[domeKey][checkOut].push({ seg: "half", label });
       }
     });
   });
@@ -1715,12 +1719,16 @@ function renderBookingCalendar() {
     const data = bookingMonthData[dateKey] || {};
     const hasDome1 = isDomeMarkedBooked(data, "dome1");
     const hasDome2 = isDomeMarkedBooked(data, "dome2");
+    const dome1Name = data.dome1Name ? data.dome1Name.trim() : "";
+    const dome2Name = data.dome2Name ? data.dome2Name.trim() : "";
     const dome1Ranges = (bookingRangeVisualMap.dome1 && bookingRangeVisualMap.dome1[dateKey]) || [];
     const dome2Ranges = (bookingRangeVisualMap.dome2 && bookingRangeVisualMap.dome2[dateKey]) || [];
     const showDome1Range = dome1Ranges.length > 0;
     const showDome2Range = dome2Ranges.length > 0;
-    const dome1RangesHtml = dome1Ranges.map((seg) => `<span class="calendar-badge range ${seg}">Dome 1 booked</span>`).join("");
-    const dome2RangesHtml = dome2Ranges.map((seg) => `<span class="calendar-badge range ${seg}">Dome 2 booked</span>`).join("");
+    const dome1Label = dome1Name || "Dome 1 booked";
+    const dome2Label = dome2Name || "Dome 2 booked";
+    const dome1RangesHtml = dome1Ranges.map((item) => `<span class="calendar-badge range ${item.seg}">${item.label}</span>`).join("");
+    const dome2RangesHtml = dome2Ranges.map((item) => `<span class="calendar-badge range ${item.seg}">${item.label}</span>`).join("");
     const cell = document.createElement("button");
     cell.type = "button";
     cell.className = "calendar-cell";
@@ -1729,8 +1737,8 @@ function renderBookingCalendar() {
     cell.innerHTML = `
       <div class="date-num">${d}</div>
       <div class="calendar-status">
-        ${showDome1Range ? dome1RangesHtml : (hasDome1 ? '<span class="calendar-badge">Dome 1 booked</span>' : "")}
-        ${showDome2Range ? dome2RangesHtml : (hasDome2 ? '<span class="calendar-badge">Dome 2 booked</span>' : "")}
+        ${showDome1Range ? dome1RangesHtml : (hasDome1 ? `<span class="calendar-badge">${dome1Label}</span>` : "")}
+        ${showDome2Range ? dome2RangesHtml : (hasDome2 ? `<span class="calendar-badge">${dome2Label}</span>` : "")}
       </div>
     `;
 
