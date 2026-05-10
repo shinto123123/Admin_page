@@ -1,0 +1,2264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin – Order History</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f8f4ec;
+  padding: 40px;
+}
+
+h1 {
+  text-align: center;
+  color: #7a5a2b;
+  margin-bottom: 20px;
+}
+
+.tab-wrapper {
+  max-width: 900px;
+  margin: 0 auto 24px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.tab {
+  border: 1px solid #c89d5c;
+  background: #fff;
+  color: #7a5a2b;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tab.active {
+  background: #c89d5c;
+  color: #1e1c1c;
+}
+
+/* ===== Earnings Section ===== */
+.earnings-wrapper {
+  max-width: 500px;
+  margin: 0 auto 30px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(200,157,92,0.3);
+}
+
+.earnings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.earnings-title {
+  font-size: 14px;
+  color: #7a5a2b;
+}
+
+.earnings-amount {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.order-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(200,157,92,0.3);
+}
+
+.order-card h3 {
+  margin: 0 0 10px;
+  color: #c89d5c;
+}
+
+.item {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.total {
+  margin-top: 12px;
+  font-weight: 700;
+  color: #7a5a2b;
+}
+
+.status {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #555;
+}
+
+.manage-form {
+  max-width: 600px;
+  margin: 0 auto 20px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(200,157,92,0.3);
+  display: grid;
+  gap: 10px;
+}
+
+.manage-form input,
+.manage-form select {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.form-actions button {
+  flex: 1;
+  border-radius: 10px;
+  border: none;
+  padding: 10px;
+  background: #c89d5c;
+  color: #1e1c1c;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.food-list {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+}
+
+.food-card {
+  background: #fff;
+  border: 1px solid rgba(200,157,92,0.3);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.food-card .controls {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.food-card .controls button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.food-card .controls .edit { background: #7a5a2b; color: #fff; }
+.food-card .controls .delete { background: #e84f4f; color: #fff; }
+
+.food-filter {
+  max-width: 900px;
+  margin: 0 auto 20px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.food-filter button {
+  border: 1px solid #c89d5c;
+  background: #fff;
+  color: #7a5a2b;
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.food-filter button.active {
+  background: #c89d5c;
+  color: #1e1c1c;
+}
+
+.food-search {
+  max-width: 900px;
+  margin: 0 auto 14px;
+}
+
+.food-search input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+/* ===== Cleaning Photos Section ===== */
+.date-section {
+  background: white;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.upload-group {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.upload-group img {
+  width: 200px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.label {
+  text-align: center;
+  font-weight: bold;
+}
+
+.container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.photo-group {
+  margin-bottom: 30px;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.photo-group h2 {
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.photo-item {
+  flex: 1 1 300px;
+  text-align: center;
+}
+
+.photo-item img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.photo-item label {
+  display: block;
+  margin-top: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+#loading {
+  text-align: center;
+  font-size: 18px;
+  color: #666;
+}
+
+#error {
+  text-align: center;
+  font-size: 18px;
+  color: red;
+}
+
+/* ===== Guest Check-Ins Section ===== */
+.checkins-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #fffaf0;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  overflow-x: auto;
+}
+
+.checkins-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.checkins-table th,
+.checkins-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e6dfcf;
+  text-align: left;
+  font-size: 14px;
+}
+
+.checkins-table th {
+  background: #f1e8cf;
+  font-weight: 600;
+}
+
+.checkins-table tr:hover {
+  background: #f9f5e9;
+}
+
+.checkins-loading {
+  text-align: center;
+  padding: 30px;
+  font-size: 14px;
+  color: #777;
+}
+
+.checkins-link {
+  color: #b89b3c;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* ===== Booking Details Section ===== */
+.booking-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.booking-calendar {
+  background: #fff;
+  border: 1px solid rgba(200,157,92,0.3);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.calendar-header button {
+  border: 1px solid #c89d5c;
+  background: #fff;
+  color: #7a5a2b;
+  border-radius: 10px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.calendar-title {
+  font-weight: 700;
+  color: #7a5a2b;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.calendar-day-name {
+  text-align: center;
+  font-weight: 700;
+  color: #7a5a2b;
+  font-size: 13px;
+}
+
+.calendar-cell {
+  position: relative;
+  min-height: 92px;
+  border: 1px solid #ead8b7;
+  border-radius: 10px;
+  background: #fffdf8;
+  padding: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.calendar-cell.empty {
+  cursor: default;
+  background: #faf7ef;
+}
+
+.calendar-cell.selected {
+  border-color: #c89d5c;
+  box-shadow: inset 0 0 0 1px #c89d5c;
+}
+
+.calendar-cell .date-num {
+  font-weight: 700;
+  color: #7a5a2b;
+  font-size: 13px;
+}
+
+.calendar-status {
+  position: relative;
+  z-index: 2;
+  margin-top: 6px;
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  overflow: visible;
+}
+
+.calendar-badge {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  font-size: 11px;
+  line-height: 1.2;
+  background: #e7f6e8;
+  color: #216b25;
+  border-radius: 999px;
+  padding: 2px 8px;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.calendar-badge.range {
+  display: block;
+  min-height: 16px;
+  width: calc(100% + 24px);
+  max-width: none;
+  margin-left: -8px;
+  margin-right: -16px;
+  padding: 2px 6px;
+  border-radius: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+.calendar-badge.range.start {
+  border-radius: 999px 0 0 999px;
+}
+
+.calendar-badge.range.end {
+  border-radius: 0 999px 999px 0;
+}
+
+.calendar-badge.range.single {
+  border-radius: 999px;
+}
+
+.calendar-badge.range.half {
+  width: calc(50% + 12px);
+  margin-right: 0;
+  border-radius: 999px 0 0 999px;
+}
+
+.booking-form {
+  background: #fff;
+  border: 1px solid rgba(200,157,92,0.3);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.booking-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 999;
+  padding: 28px 16px;
+  overflow-y: auto;
+}
+
+.booking-modal.open {
+  display: flex;
+}
+
+.booking-modal .booking-form {
+  width: 100%;
+  max-width: 520px;
+  margin-bottom: 0;
+  margin-top: 12px;
+  box-sizing: border-box;
+}
+
+.booking-form label {
+  font-weight: 600;
+  color: #7a5a2b;
+}
+
+.upload-status {
+  font-size: 13px;
+  color: #2f7d32;
+  margin-top: -4px;
+}
+
+.booking-preview {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.booking-preview img {
+  width: 100%;
+  max-width: 460px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.view-photo-btn {
+  margin-top: 4px;
+  border: 1px solid #c89d5c;
+  background: #fff;
+  color: #7a5a2b;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.booking-form input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.booking-form button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  background: #c89d5c;
+  color: #1e1c1c;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.booking-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.booking-actions button {
+  flex: 1 1 120px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  background: #e84f4f;
+  color: #fff;
+}
+
+.modal-close-btn {
+  background: #888 !important;
+  color: #fff !important;
+}
+
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.72);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.image-lightbox.open {
+  display: flex;
+}
+
+.image-lightbox-content {
+  position: relative;
+  max-width: 92vw;
+  max-height: 88vh;
+}
+
+.image-lightbox-content img {
+  max-width: 92vw;
+  max-height: 88vh;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+.image-lightbox-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  color: #333;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .booking-modal {
+    padding: 16px 10px;
+  }
+
+  .booking-modal .booking-form {
+    margin-top: 0;
+    border-radius: 12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Admin Dashboard</h1>
+
+<div class="tab-wrapper">
+  <button id="historyTab" class="tab active">Order History</button>
+  <button id="manageTab" class="tab">Food Management</button>
+  <button id="photosTab" class="tab">Cleaning Photos</button>
+  <button id="checkinsTab" class="tab">Guest Check-Ins</button>
+  <button id="bookingTab" class="tab">Booking Details</button>
+</div>
+
+<div id="historySection">
+  <h2>Food Order History</h2>
+
+  <div class="earnings-wrapper">
+    <div class="earnings-header">
+      <div class="earnings-title">Total Earnings</div>
+      <select id="monthSelect"></select>
+    </div>
+    <div class="earnings-amount" id="totalEarnings">₹ 0</div>
+  </div>
+
+  <div id="orders"></div>
+</div>
+
+<div id="manageSection" style="display:none;">
+  <h2>Food Menu Management</h2>
+
+  <div class="manage-form">
+    <input type="text" id="foodName" placeholder="Food name">
+    <select id="foodCategory">
+      <option value="Breakfast">Breakfast</option>
+      <option value="LunchDinner">Lunch &amp; Dinner</option>
+    </select>
+    <input type="number" id="foodPrice" placeholder="Price" min="0" step="0.01">
+    <input type="text" id="foodDescription" placeholder="Description (optional)">
+    <div class="form-actions">
+      <button id="saveFoodBtn">Add Food Item</button>
+      <button id="cancelEditBtn" style="display:none; background:#888;">Cancel Edit</button>
+    </div>
+  </div>
+
+  <div class="food-filter" id="foodFilter">
+    <button class="cat-btn active" data-category="All">All</button>
+    <button class="cat-btn" data-category="Breakfast">Breakfast</button>
+    <button class="cat-btn" data-category="LunchDinner">Lunch &amp; Dinner</button>
+  </div>
+
+  <div class="food-search">
+    <input type="text" id="foodSearch" placeholder="Search food by name or description">
+  </div>
+
+  <div class="food-list" id="foodList"></div>
+</div>
+
+<div id="photosSection" style="display:none;">
+  <div class="container">
+    <h1>Cleaning Photos Viewer</h1>
+
+    <div style="max-width: 300px; margin: 0 auto 20px; text-align: center;">
+      <label for="dateFilter" style="display: block; margin-bottom: 8px; font-weight: 600; color: #7a5a2b;">Filter by Date:</label>
+      <input type="date" id="dateFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #ccc; width: 100%;">
+      <button id="clearFilterBtn" style="margin-top: 8px; padding: 6px 12px; border: 1px solid #c89d5c; background: #fff; color: #7a5a2b; border-radius: 8px; cursor: pointer; font-weight: 600;">Clear Filter</button>
+    </div>
+
+    <div id="loading">Loading photos...</div>
+    <div id="error" style="display: none;"></div>
+    <div id="photosContainer"></div>
+  </div>
+</div>
+
+<div id="checkinsSection" style="display:none;">
+  <h2>Guest Check-Ins</h2>
+
+  <div class="checkins-container">
+    <table class="checkins-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>ID Type</th>
+                    <th>Guests</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>ID Proof</th>
+        </tr>
+      </thead>
+      <tbody id="checkinTable">
+        <tr>
+          <td colspan="7" class="checkins-loading">Loading check-ins…</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="bookingSection" style="display:none;">
+  <h2>Booking Details</h2>
+  <div class="earnings-wrapper">
+    <div class="earnings-header">
+      <div class="earnings-title">Total Booking Earnings</div>
+    </div>
+    <div class="earnings-amount" id="bookingTotalEarnings">₹ 0</div>
+  </div>
+  <div class="booking-wrapper">
+    <div class="booking-calendar">
+      <div class="calendar-header">
+        <button id="prevMonthBtn" type="button">Prev</button>
+        <div id="calendarTitle" class="calendar-title"></div>
+        <button id="nextMonthBtn" type="button">Next</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+    <div id="bookingModal" class="booking-modal">
+      <div class="booking-form">
+        <label for="bookingDate">Selected Date</label>
+        <input type="text" id="bookingDate" readonly>
+        <label for="bookingCheckoutDateDome1">Dome 1 Checkout Date</label>
+        <input type="date" id="bookingCheckoutDateDome1">
+        <label for="dome1Name">Name</label>
+        <input type="text" id="dome1Name" placeholder="Enter guest name">
+        <label for="bookingScreenshotDome1">Dome 1</label>
+        <input type="file" id="bookingScreenshotDome1" accept="image/*,application/pdf">
+        <label for="dome1Platform">Platform</label>
+        <select id="dome1Platform">
+          <option value="">Select platform</option>
+          <option value="Bookings.com">Bookings.com</option>
+          <option value="Agoda">Agoda</option>
+          <option value="Airbnb">Airbnb</option>
+          <option value="Offline">Offline</option>
+        </select>
+        <label for="dome1Phone">Contact</label>
+        <input type="tel" id="dome1Phone" placeholder="Enter phone number">
+        <label for="dome1Notes">Note</label>
+        <input type="text" id="dome1Notes" placeholder="Enter notes">
+        <label for="dome1TotalAmount">Total Amount</label>
+        <input type="number" id="dome1TotalAmount" placeholder="Enter total amount" min="0" step="0.01">
+        <label for="dome1AmountPaid">Advance Paid</label>
+        <input type="number" id="dome1AmountPaid" placeholder="Enter paid amount" min="0" step="0.01">
+        <label for="dome1BalanceAmount">Balance Amount</label>
+        <input type="text" id="dome1BalanceAmount" placeholder="Auto calculated" readonly>
+        <div id="dome1UploadStatus" class="upload-status"></div>
+        <div id="dome1Preview" class="booking-preview"></div>
+        <label for="bookingCheckoutDateDome2">Dome 2 Checkout Date</label>
+        <input type="date" id="bookingCheckoutDateDome2">
+        <label for="dome2Name">Name</label>
+        <input type="text" id="dome2Name" placeholder="Enter guest name">
+        <label for="bookingScreenshotDome2">Dome 2</label>
+        <input type="file" id="bookingScreenshotDome2" accept="image/*,application/pdf">
+        <label for="dome2Platform">Platform</label>
+        <select id="dome2Platform">
+          <option value="">Select platform</option>
+          <option value="Bookings.com">Bookings.com</option>
+          <option value="Agoda">Agoda</option>
+          <option value="Airbnb">Airbnb</option>
+          <option value="Offline">Offline</option>
+        </select>
+        <label for="dome2Phone">Contact</label>
+        <input type="tel" id="dome2Phone" placeholder="Enter phone number">
+        <label for="dome2Notes">Note</label>
+        <input type="text" id="dome2Notes" placeholder="Enter notes">
+        <label for="dome2TotalAmount">Total Amount</label>
+        <input type="number" id="dome2TotalAmount" placeholder="Enter total amount" min="0" step="0.01">
+        <label for="dome2AmountPaid">Advance Paid</label>
+        <input type="number" id="dome2AmountPaid" placeholder="Enter paid amount" min="0" step="0.01">
+        <label for="dome2BalanceAmount">Balance Amount</label>
+        <input type="text" id="dome2BalanceAmount" placeholder="Auto calculated" readonly>
+        <div id="dome2UploadStatus" class="upload-status"></div>
+        <div id="dome2Preview" class="booking-preview"></div>
+        <button id="saveBookingBtn">Upload</button>
+        <div class="booking-actions">
+          <button id="deleteDome1Btn" type="button">Delete Dome1</button>
+          <button id="deleteDome2Btn" type="button">Delete Dome2</button>
+          <button id="closeBookingModalBtn" class="modal-close-btn" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="imageLightbox" class="image-lightbox">
+  <div class="image-lightbox-content">
+    <button id="imageLightboxClose" type="button" class="image-lightbox-close">Close</button>
+    <img id="imageLightboxImg" alt="Preview">
+  </div>
+</div>
+
+<script>
+// 🔹 Firebase init
+firebase.initializeApp({
+  apiKey: "AIzaSyDiRT9m2lyPVvbkcHYFimcMi1SSO6NWP-Y",
+  authDomain: "edensglamp.firebaseapp.com",
+  projectId: "edensglamp",
+  storageBucket: "edensglamp.firebasestorage.app"
+});
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+const container = document.getElementById("orders");
+const monthSelect = document.getElementById("monthSelect");
+const totalEarningsEl = document.getElementById("totalEarnings");
+
+let allOrders = [];
+
+// 🔹 Month dropdown
+const months = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+];
+
+const currentMonth = new Date().getMonth();
+months.forEach((m, i) => {
+  const opt = document.createElement("option");
+  opt.value = i;
+  opt.text = m;
+  if (i === currentMonth) opt.selected = true;
+  monthSelect.appendChild(opt);
+});
+
+// 🔐 Auth protection
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "admin-login.html";
+    return;
+  }
+
+  db.collection("order_history")
+    .orderBy("createdAt", "desc")
+    .onSnapshot(
+      snapshot => {
+        allOrders = [];
+
+        snapshot.forEach(doc => {
+          const o = doc.data();
+          if (o.createdAt) allOrders.push(o);
+        });
+
+        renderOrdersAndEarnings();
+      },
+      error => {
+        console.error("Error fetching orders:", error);
+        alert("Error loading orders: " + error.message);
+      }
+    );
+
+  // load food menu data after admin has logged in
+  fetchFoodMenu();
+  cleanupSpecificBookingDatesOnce();
+});
+
+// 🔹 Render orders + earnings
+function renderOrdersAndEarnings() {
+  const selectedMonth = Number(monthSelect.value);
+  let total = 0;
+  container.innerHTML = "";
+
+  allOrders.forEach(o => {
+    const d = o.createdAt.toDate();
+
+    if (d.getMonth() !== selectedMonth) return;
+
+    total += Number(o.total || 0);
+
+    const time = d.toLocaleString();
+
+    container.innerHTML += `
+      <div class="order-card">
+        <h3>${time}</h3>
+
+        ${o.items.map(i =>
+          `<div class="item">
+             ${i.name} × ${i.qty} — ₹${i.price} each
+             <strong>(₹${i.price * i.qty})</strong>
+           </div>`
+        ).join("")}
+
+        <div class="total">Total Amount: ₹${o.total}</div>
+        <div class="status">Status: ${o.status}</div>
+      </div>
+    `;
+  });
+
+  totalEarningsEl.innerText = "₹ " + total;
+}
+
+async function cleanupSpecificBookingDatesOnce() {
+  const cleanupFlag = "booking_cleanup_2026_05_15_19_20_done_v2";
+  if (localStorage.getItem(cleanupFlag) === "1") return;
+
+  const datesToDelete = ["2026-05-15", "2026-05-19", "2026-05-20"];
+
+  try {
+    for (const date of datesToDelete) {
+      const docRef = db.collection("booking_screenshots").doc(date);
+      const snap = await docRef.get();
+      if (!snap.exists) continue;
+
+      const data = snap.data() || {};
+      const storagePaths = [data.dome1Path, data.dome2Path].filter(Boolean);
+
+      for (const p of storagePaths) {
+        try {
+          await storage.ref(p).delete();
+        } catch (err) {
+          console.warn("Storage cleanup warning:", err);
+        }
+      }
+
+      await docRef.delete();
+    }
+
+    localStorage.setItem(cleanupFlag, "1");
+    console.log("Booking cleanup complete for 2026-05-15 and 2026-05-20.");
+  } catch (err) {
+    console.error("Booking cleanup failed:", err);
+  }
+}
+
+// 🔄 Month change
+monthSelect.addEventListener("change", renderOrdersAndEarnings);
+
+// ===== Food management =====
+const historyTab = document.getElementById("historyTab");
+const manageTab = document.getElementById("manageTab");
+const photosTab = document.getElementById("photosTab");
+const checkinsTab = document.getElementById("checkinsTab");
+const bookingTab = document.getElementById("bookingTab");
+const historySection = document.getElementById("historySection");
+const manageSection = document.getElementById("manageSection");
+const photosSection = document.getElementById("photosSection");
+const checkinsSection = document.getElementById("checkinsSection");
+const bookingSection = document.getElementById("bookingSection");
+
+const foodName = document.getElementById("foodName");
+const foodCategory = document.getElementById("foodCategory");
+const foodPrice = document.getElementById("foodPrice");
+const foodDescription = document.getElementById("foodDescription");
+const saveFoodBtn = document.getElementById("saveFoodBtn");
+const cancelEditBtn = document.getElementById("cancelEditBtn");
+const foodList = document.getElementById("foodList");
+const foodSearch = document.getElementById("foodSearch");
+const bookingDateInput = document.getElementById("bookingDate");
+const bookingCheckoutDateDome1Input = document.getElementById("bookingCheckoutDateDome1");
+const bookingCheckoutDateDome2Input = document.getElementById("bookingCheckoutDateDome2");
+const bookingModal = document.getElementById("bookingModal");
+const bookingScreenshotDome1Input = document.getElementById("bookingScreenshotDome1");
+const bookingScreenshotDome2Input = document.getElementById("bookingScreenshotDome2");
+const dome1PlatformInput = document.getElementById("dome1Platform");
+const dome2PlatformInput = document.getElementById("dome2Platform");
+const dome1NameInput = document.getElementById("dome1Name");
+const dome2NameInput = document.getElementById("dome2Name");
+const dome1PhoneInput = document.getElementById("dome1Phone");
+const dome2PhoneInput = document.getElementById("dome2Phone");
+const dome1NotesInput = document.getElementById("dome1Notes");
+const dome2NotesInput = document.getElementById("dome2Notes");
+const dome1TotalAmountInput = document.getElementById("dome1TotalAmount");
+const dome1AmountPaidInput = document.getElementById("dome1AmountPaid");
+const dome1BalanceAmountInput = document.getElementById("dome1BalanceAmount");
+const dome2TotalAmountInput = document.getElementById("dome2TotalAmount");
+const dome2AmountPaidInput = document.getElementById("dome2AmountPaid");
+const dome2BalanceAmountInput = document.getElementById("dome2BalanceAmount");
+const dome1UploadStatus = document.getElementById("dome1UploadStatus");
+const dome2UploadStatus = document.getElementById("dome2UploadStatus");
+const dome1Preview = document.getElementById("dome1Preview");
+const dome2Preview = document.getElementById("dome2Preview");
+const saveBookingBtn = document.getElementById("saveBookingBtn");
+const deleteDome1Btn = document.getElementById("deleteDome1Btn");
+const deleteDome2Btn = document.getElementById("deleteDome2Btn");
+const closeBookingModalBtn = document.getElementById("closeBookingModalBtn");
+const prevMonthBtn = document.getElementById("prevMonthBtn");
+const nextMonthBtn = document.getElementById("nextMonthBtn");
+const calendarTitle = document.getElementById("calendarTitle");
+const calendarGrid = document.getElementById("calendarGrid");
+const bookingTotalEarningsEl = document.getElementById("bookingTotalEarnings");
+const imageLightbox = document.getElementById("imageLightbox");
+const imageLightboxImg = document.getElementById("imageLightboxImg");
+const imageLightboxClose = document.getElementById("imageLightboxClose");
+
+let currentFoodId = null;
+let allFoods = [];
+let displayFoods = [];
+let foodCategoryFilter = "All";
+let foodSearchTerm = "";
+let bookingCalendarDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let selectedBookingDate = "";
+let bookingMonthData = {};
+let bookingRangeVisualMap = { dome1: {}, dome2: {} };
+
+function setTab(active) {
+  if (active === "history") {
+    historySection.style.display = "block";
+    manageSection.style.display = "none";
+    photosSection.style.display = "none";
+    checkinsSection.style.display = "none";
+    bookingSection.style.display = "none";
+    historyTab.classList.add("active");
+    manageTab.classList.remove("active");
+    photosTab.classList.remove("active");
+    checkinsTab.classList.remove("active");
+    bookingTab.classList.remove("active");
+  } else if (active === "manage") {
+    historySection.style.display = "none";
+    manageSection.style.display = "block";
+    photosSection.style.display = "none";
+    checkinsSection.style.display = "none";
+    bookingSection.style.display = "none";
+    historyTab.classList.remove("active");
+    manageTab.classList.add("active");
+    photosTab.classList.remove("active");
+    checkinsTab.classList.remove("active");
+    bookingTab.classList.remove("active");
+  } else if (active === "photos") {
+    historySection.style.display = "none";
+    manageSection.style.display = "none";
+    photosSection.style.display = "block";
+    checkinsSection.style.display = "none";
+    bookingSection.style.display = "none";
+    historyTab.classList.remove("active");
+    manageTab.classList.remove("active");
+    photosTab.classList.add("active");
+    checkinsTab.classList.remove("active");
+    bookingTab.classList.remove("active");
+
+    // Set date filter to today's date by default
+    const dateFilter = document.getElementById('dateFilter');
+    if (dateFilter) {
+      const today = new Date();
+      const todayString = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      dateFilter.value = todayString;
+      loadCleaningPhotos(todayString);
+    } else {
+      loadCleaningPhotos();
+    }
+  } else if (active === "checkins") {
+    historySection.style.display = "none";
+    manageSection.style.display = "none";
+    photosSection.style.display = "none";
+    checkinsSection.style.display = "block";
+    bookingSection.style.display = "none";
+    historyTab.classList.remove("active");
+    manageTab.classList.remove("active");
+    photosTab.classList.remove("active");
+    checkinsTab.classList.add("active");
+    bookingTab.classList.remove("active");
+    loadCheckins();
+  } else if (active === "booking") {
+    historySection.style.display = "none";
+    manageSection.style.display = "none";
+    photosSection.style.display = "none";
+    checkinsSection.style.display = "none";
+    bookingSection.style.display = "block";
+    historyTab.classList.remove("active");
+    manageTab.classList.remove("active");
+    photosTab.classList.remove("active");
+    checkinsTab.classList.remove("active");
+    bookingTab.classList.add("active");
+    loadBookingCalendarMonth();
+  }
+}
+
+historyTab.addEventListener("click", () => setTab("history"));
+manageTab.addEventListener("click", () => setTab("manage"));
+photosTab.addEventListener("click", () => setTab("photos"));
+checkinsTab.addEventListener("click", () => setTab("checkins"));
+bookingTab.addEventListener("click", () => setTab("booking"));
+
+// Category filter buttons
+document.querySelectorAll(".cat-btn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+    e.target.classList.add("active");
+    foodCategoryFilter = e.target.getAttribute("data-category");
+    renderFoodList();
+  });
+});
+
+foodSearch.addEventListener("input", (e) => {
+  foodSearchTerm = e.target.value.trim().toLowerCase();
+  renderFoodList();
+});
+
+function fetchFoodMenu() {
+  db.collection("food_menu")
+    .orderBy("category")
+    .onSnapshot(
+      snapshot => {
+        allFoods = [];
+        snapshot.forEach(doc => allFoods.push({ id: doc.id, ...doc.data() }));
+        renderFoodList();
+      },
+      error => {
+        console.error("Error fetching food menu:", error);
+        alert("Error loading food menu: " + error.message);
+      }
+    );
+}
+
+function renderFoodList() {
+  displayFoods = [];
+  foodList.innerHTML = "";
+  if (!allFoods.length) {
+    foodList.innerHTML = "<p>No food items found.</p>";
+    return;
+  }
+
+  const breakfastFoods = allFoods
+    .filter(f => f.category === "Breakfast")
+    .map(f => ({
+      id: f.id,
+      category: "Breakfast",
+      displayCategory: "Breakfast",
+      docIds: [f.id],
+      name: f.name || "",
+      price: f.price,
+      description: f.description || ""
+    }));
+
+  const lunchDinnerGroups = {};
+  allFoods
+    .filter(f => f.category === "Lunch" || f.category === "Dinner")
+    .forEach(f => {
+      const fallbackKey = `name:${(f.name || "").trim().toLowerCase()}`;
+      const groupKey = f.syncGroupId || fallbackKey;
+      if (!lunchDinnerGroups[groupKey]) {
+        lunchDinnerGroups[groupKey] = [];
+      }
+      lunchDinnerGroups[groupKey].push(f);
+    });
+
+  const lunchDinnerFoods = Object.entries(lunchDinnerGroups).map(([groupKey, items]) => {
+    const base = items[0];
+    return {
+      id: `ld-${groupKey}`,
+      category: "LunchDinner",
+      displayCategory: "Lunch & Dinner",
+      docIds: items.map(item => item.id),
+      syncGroupId: base.syncGroupId || null,
+      name: base.name || "",
+      price: base.price,
+      description: base.description || ""
+    };
+  });
+
+  displayFoods = [...breakfastFoods, ...lunchDinnerFoods];
+
+  const categoryFilteredFoods = foodCategoryFilter === "All"
+    ? displayFoods
+    : displayFoods.filter(f => f.category === foodCategoryFilter);
+
+  const filteredFoods = !foodSearchTerm
+    ? categoryFilteredFoods
+    : categoryFilteredFoods.filter(f => {
+        const name = (f.name || "").toLowerCase();
+        const description = (f.description || "").toLowerCase();
+        return name.includes(foodSearchTerm) || description.includes(foodSearchTerm);
+      });
+
+  if (!filteredFoods.length) {
+    foodList.innerHTML = "<p>No food items in this category.</p>";
+    return;
+  }
+
+  filteredFoods.forEach(food => {
+    const price = food.price ? Number(food.price).toFixed(2) : "0.00";
+    foodList.innerHTML += `
+      <div class="food-card">
+        <strong>${food.name}</strong> (
+            ${food.displayCategory} • ₹${price}
+        )<br>
+        ${food.description ? `<em>${food.description}</em><br>` : ""}
+        <div class="controls">
+          <button class="edit" data-food-id="${food.id}">Edit</button>
+          <button class="delete" data-food-id="${food.id}">Delete</button>
+        </div>
+      </div>
+    `;
+  });
+
+  attachFoodCardListeners();
+}
+
+function attachFoodCardListeners() {
+  foodList.querySelectorAll(".edit").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const id = e.target.getAttribute("data-food-id");
+      editFood(id);
+    });
+  });
+
+  foodList.querySelectorAll(".delete").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const id = e.target.getAttribute("data-food-id");
+      deleteFood(id);
+    });
+  });
+}
+
+function editFood(id) {
+  const food = displayFoods.find(i => i.id === id);
+  if (!food) return;
+
+  currentFoodId = id;
+  foodName.value = food.name;
+  foodCategory.value = food.category;
+  foodPrice.value = food.price;
+  foodDescription.value = food.description || "";
+  saveFoodBtn.textContent = "Update Food";
+  cancelEditBtn.style.display = "block";
+  setTab("manage");
+}
+
+function deleteFood(id) {
+  if (!confirm("Delete this food item?")) return;
+
+  const food = displayFoods.find(i => i.id === id);
+  if (!food || !food.docIds || !food.docIds.length) return;
+
+  Promise.all(food.docIds.map(docId => db.collection("food_menu").doc(docId).delete()))
+    .then(() => {
+      alert("Food item deleted successfully.");
+    })
+    .catch(err => {
+      alert("Error deleting food: " + err.message);
+      console.error("Delete error:", err);
+    });
+}
+
+function resetFoodForm() {
+  currentFoodId = null;
+  foodName.value = "";
+  foodCategory.value = "Breakfast";
+  foodPrice.value = "";
+  foodDescription.value = "";
+  saveFoodBtn.textContent = "Add Food Item";
+  cancelEditBtn.style.display = "none";
+}
+
+cancelEditBtn.addEventListener("click", resetFoodForm);
+
+saveFoodBtn.addEventListener("click", () => {
+  const name = foodName.value.trim();
+  const category = foodCategory.value;
+  const price = Number(foodPrice.value);
+  const description = foodDescription.value.trim();
+
+  if (!name || !category || isNaN(price) || price < 0) {
+    return alert("Please fill valid food name, category and price.");
+  }
+
+  if (currentFoodId) {
+    const editingFood = displayFoods.find(item => item.id === currentFoodId);
+    if (!editingFood) {
+      alert("Unable to locate this food item for update.");
+      return;
+    }
+
+    if (category === "Breakfast") {
+      const primaryDocId = editingFood.docIds[0];
+      const extraDocIds = editingFood.docIds.slice(1);
+      const payload = { name, category: "Breakfast", price, description };
+
+      db.collection("food_menu").doc(primaryDocId).set(payload, { merge: true })
+        .then(() => Promise.all(extraDocIds.map(docId => db.collection("food_menu").doc(docId).delete())))
+        .then(() => {
+          resetFoodForm();
+          alert("Food details updated successfully.");
+        })
+        .catch(err => {
+          alert("Error updating food: " + err.message);
+          console.error("Update error:", err);
+        });
+      return;
+    }
+
+    const normalizedOldName = (editingFood.name || "").trim().toLowerCase();
+    const relatedDocs = allFoods.filter(doc => {
+      if (doc.category !== "Lunch" && doc.category !== "Dinner") return false;
+      if (editingFood.syncGroupId && doc.syncGroupId === editingFood.syncGroupId) return true;
+      if (editingFood.docIds.includes(doc.id)) return true;
+      return (doc.name || "").trim().toLowerCase() === normalizedOldName;
+    });
+
+    const lunchDocs = relatedDocs.filter(doc => doc.category === "Lunch");
+    const dinnerDocs = relatedDocs.filter(doc => doc.category === "Dinner");
+    const lunchDoc = lunchDocs[0];
+    const dinnerDoc = dinnerDocs[0];
+    const extraDocIds = [...lunchDocs.slice(1), ...dinnerDocs.slice(1)].map(doc => doc.id);
+    const syncGroupId = (relatedDocs.find(doc => doc.syncGroupId) || {}).syncGroupId || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const basePayload = { name, price, description, syncGroupId };
+    const ops = [];
+
+    if (lunchDoc) {
+      ops.push(db.collection("food_menu").doc(lunchDoc.id).set({ ...basePayload, category: "Lunch" }, { merge: true }));
+    } else {
+      ops.push(db.collection("food_menu").add({ ...basePayload, category: "Lunch" }));
+    }
+
+    if (dinnerDoc) {
+      ops.push(db.collection("food_menu").doc(dinnerDoc.id).set({ ...basePayload, category: "Dinner" }, { merge: true }));
+    } else {
+      ops.push(db.collection("food_menu").add({ ...basePayload, category: "Dinner" }));
+    }
+
+    Promise.all(ops)
+      .then(() => Promise.all(extraDocIds.map(docId => db.collection("food_menu").doc(docId).delete())))
+      .then(() => {
+        resetFoodForm();
+        alert("Food details updated successfully.");
+      })
+      .catch(err => {
+        alert("Error updating food: " + err.message);
+        console.error("Update error:", err);
+      });
+    return;
+  }
+
+  if (category === "Breakfast") {
+    const payload = { name, category: "Breakfast", price, description };
+    db.collection("food_menu").add(payload)
+      .then(() => {
+        resetFoodForm();
+        alert("Food item added successfully.");
+      })
+      .catch(err => {
+        alert("Error adding food: " + err.message);
+        console.error("Add error:", err);
+      });
+    return;
+  }
+
+  const syncGroupId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const lunchPayload = { name, category: "Lunch", price, description, syncGroupId };
+  const dinnerPayload = { name, category: "Dinner", price, description, syncGroupId };
+
+  Promise.all([
+    db.collection("food_menu").add(lunchPayload),
+    db.collection("food_menu").add(dinnerPayload)
+  ])
+    .then(() => {
+      resetFoodForm();
+      alert("Food item added successfully.");
+    })
+    .catch(err => {
+      alert("Error adding food: " + err.message);
+      console.error("Add error:", err);
+    });
+});
+
+// ===== Cleaning Photos =====
+async function loadCleaningPhotos(filterDate = null) {
+  const loadingDiv = document.getElementById('loading');
+  const errorDiv = document.getElementById('error');
+  const photosContainer = document.getElementById('photosContainer');
+
+  try {
+    const rootRef = storage.ref('cleaning_photos/');
+    const rootList = await rootRef.listAll();
+
+    const allFiles = [];
+
+    // Get files from date folders
+    for (const prefix of rootList.prefixes) {
+      const dateList = await prefix.listAll();
+      allFiles.push(...dateList.items);
+    }
+
+    // Also get any files directly in root (though unlikely)
+    allFiles.push(...rootList.items);
+
+    // Group by timestamp
+    const groups = {};
+    allFiles.forEach(item => {
+      const pathParts = item.name.split('_');
+      if (pathParts.length >= 2) {
+        const timestamp = pathParts[pathParts.length - 1].split('.')[0];
+        const type = pathParts.slice(0, -1).join('_');
+        if (!groups[timestamp]) {
+          groups[timestamp] = {};
+        }
+        groups[timestamp][type] = item;
+      }
+    });
+
+    // Sort groups by timestamp descending (newest first)
+    const sortedTimestamps = Object.keys(groups).sort((a, b) => b - a);
+
+    photosContainer.innerHTML = '';
+
+    for (const timestamp of sortedTimestamps) {
+      const group = groups[timestamp];
+      const date = new Date(parseInt(timestamp));
+
+      // Apply date filter if specified
+      if (filterDate) {
+        const filterDateObj = new Date(filterDate);
+        const photoDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const selectedDate = new Date(filterDateObj.getFullYear(), filterDateObj.getMonth(), filterDateObj.getDate());
+
+        if (photoDate.getTime() !== selectedDate.getTime()) {
+          continue; // Skip this group if date doesn't match
+        }
+      }
+
+      const dateString = date.toLocaleString();
+
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'photo-group';
+
+      const title = document.createElement('h2');
+      title.textContent = `Cleaning Session - ${dateString}`;
+      groupDiv.appendChild(title);
+
+      const photosDiv = document.createElement('div');
+      photosDiv.className = 'photos';
+
+      const types = ['cabin', 'room', 'toilet','toiletries'];
+      for (const type of types) {
+        if (group[type]) {
+          const photoItem = document.createElement('div');
+          photoItem.className = 'photo-item';
+
+          const img = document.createElement('img');
+          img.src = await group[type].getDownloadURL();
+          img.alt = `${type} photo`;
+
+          const label = document.createElement('label');
+          label.textContent = type.charAt(0).toUpperCase() + type.slice(1) + ' Photo';
+
+          photoItem.appendChild(img);
+          photoItem.appendChild(label);
+          photosDiv.appendChild(photoItem);
+        }
+      }
+
+      groupDiv.appendChild(photosDiv);
+      photosContainer.appendChild(groupDiv);
+    }
+
+    loadingDiv.style.display = 'none';
+
+  } catch (error) {
+    console.error(error);
+    loadingDiv.style.display = 'none';
+    errorDiv.style.display = 'block';
+    errorDiv.textContent = 'Error loading photos: ' + error.message;
+  }
+}
+
+// ===== Guest Check-Ins =====
+async function loadCheckins() {
+  const table = document.getElementById("checkinTable");
+  table.innerHTML = "";
+
+  try {
+    const snapshot = await db
+      .collection("checkins")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    if (snapshot.empty) {
+      table.innerHTML = `<tr><td colspan="7">No check-ins found</td></tr>`;
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const d = doc.data();
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${d.name || ""}</td>
+        <td>${d.phone || ""}</td>
+        <td>${d.idType || ""}</td>
+        <td>${d.guests || 1}</td>
+        <td>${d.checkinDate || ""}</td>
+        <td>${d.checkinTime || ""}</td>
+        <td>
+          ${d.idPhotoURL ? `<a href="${d.idPhotoURL}" target="_blank" class="checkins-link">View</a>` : "-"}
+        </td>
+      `;
+
+      table.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error(err);
+    table.innerHTML = `<tr><td colspan="7">Error loading data</td></tr>`;
+  }
+}
+
+// ===== Booking Details =====
+function formatDateYMD(dateObj) {
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const d = String(dateObj.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function getOrdinalDay(day) {
+  if (day > 3 && day < 21) return `${day}th`;
+  switch (day % 10) {
+    case 1: return `${day}st`;
+    case 2: return `${day}nd`;
+    case 3: return `${day}rd`;
+    default: return `${day}th`;
+  }
+}
+
+function formatDateDisplay(ymd) {
+  const dt = parseYMDToDate(ymd);
+  if (!dt) return ymd || "";
+  return `${getOrdinalDay(dt.getDate())} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
+}
+
+function parseDisplayDateToYMD(displayValue) {
+  if (!displayValue) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(displayValue)) return displayValue;
+  const cleaned = displayValue.replace(/(\d+)(st|nd|rd|th)/i, "$1").trim();
+  const parsed = new Date(cleaned);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return formatDateYMD(parsed);
+}
+
+function getActiveBookingDate() {
+  return selectedBookingDate || parseDisplayDateToYMD(bookingDateInput.value);
+}
+
+function parseYMDToDate(ymd) {
+  if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function addDaysYMD(ymd, days) {
+  const base = parseYMDToDate(ymd);
+  if (!base) return "";
+  base.setDate(base.getDate() + days);
+  return formatDateYMD(base);
+}
+
+function isDomeMarkedBooked(entry, domeKey) {
+  if (!entry || !domeKey) return false;
+  const checkout = domeKey === "dome1"
+    ? (entry.checkoutDateDome1 || entry.checkoutDate || "")
+    : (entry.checkoutDateDome2 || entry.checkoutDate || "");
+  return !!(
+    entry[`${domeKey}URL`] ||
+    checkout ||
+    entry[`${domeKey}Phone`]
+  );
+}
+
+function buildBookingRangeVisualMap(monthStart, monthEnd) {
+  const visual = { dome1: {}, dome2: {} };
+  const startBound = formatDateYMD(monthStart);
+  const endBound = formatDateYMD(monthEnd);
+
+  const entries = Object.values(bookingMonthData).sort((a, b) => {
+    const aDate = (a && a.date) ? a.date : "";
+    const bDate = (b && b.date) ? b.date : "";
+    return aDate.localeCompare(bDate);
+  });
+
+  entries.forEach((entry) => {
+    const checkIn = entry && entry.date ? entry.date : "";
+    if (!checkIn) return;
+
+    ["dome1", "dome2"].forEach((domeKey) => {
+      const hasDome = isDomeMarkedBooked(entry, domeKey);
+      if (!hasDome) return;
+      const checkOut = domeKey === "dome1"
+        ? (entry.checkoutDateDome1 || entry.checkoutDate || "")
+        : (entry.checkoutDateDome2 || entry.checkoutDate || "");
+      if (!checkOut || checkOut <= checkIn) return;
+
+      let cursor = checkIn;
+      while (cursor < checkOut) {
+        if (cursor >= startBound && cursor <= endBound) {
+          if (!visual[domeKey][cursor]) visual[domeKey][cursor] = [];
+          const nextDay = addDaysYMD(cursor, 1);
+          const isStart = cursor === checkIn;
+          const isEndNight = nextDay === checkOut;
+          let seg = "mid";
+          if (isStart && isEndNight) seg = "single";
+          else if (isStart) seg = "start";
+          else if (isEndNight) seg = "end";
+          visual[domeKey][cursor].push(seg);
+        }
+        cursor = addDaysYMD(cursor, 1);
+        if (!cursor) break;
+      }
+
+      if (checkOut >= startBound && checkOut <= endBound) {
+        if (!visual[domeKey][checkOut]) visual[domeKey][checkOut] = [];
+        visual[domeKey][checkOut].push("half");
+      }
+    });
+  });
+
+  return visual;
+}
+
+function getMonthRangeYMD(baseDate) {
+  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+  const end = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
+  return { start: formatDateYMD(start), end: formatDateYMD(end) };
+}
+
+async function loadBookingCalendarMonth() {
+  const monthStartDate = new Date(bookingCalendarDate.getFullYear(), bookingCalendarDate.getMonth(), 1);
+  const monthEndDate = new Date(bookingCalendarDate.getFullYear(), bookingCalendarDate.getMonth() + 1, 0);
+  const start = formatDateYMD(monthStartDate);
+  const end = formatDateYMD(monthEndDate);
+  const fetchStart = formatDateYMD(new Date(bookingCalendarDate.getFullYear(), bookingCalendarDate.getMonth(), -31));
+  bookingMonthData = {};
+  bookingRangeVisualMap = { dome1: {}, dome2: {} };
+  let bookingMonthTotal = 0;
+  calendarTitle.textContent = `${months[bookingCalendarDate.getMonth()]} ${bookingCalendarDate.getFullYear()}`;
+
+  try {
+    const snapshot = await db
+      .collection("booking_screenshots")
+      .where("date", ">=", fetchStart)
+      .where("date", "<=", end)
+      .get();
+
+    snapshot.forEach(doc => {
+      const data = doc.data() || {};
+      bookingMonthData[doc.id] = data;
+
+      const checkInDate = data.date || "";
+      if (checkInDate >= start && checkInDate <= end) {
+        bookingMonthTotal += Number(data.dome1TotalAmount || 0);
+        bookingMonthTotal += Number(data.dome2TotalAmount || 0);
+      }
+    });
+  } catch (err) {
+    console.error("Error loading booking calendar month:", err);
+  }
+
+  if (bookingTotalEarningsEl) {
+    bookingTotalEarningsEl.innerText = "₹ " + bookingMonthTotal;
+  }
+  bookingRangeVisualMap = buildBookingRangeVisualMap(monthStartDate, monthEndDate);
+  renderBookingCalendar();
+  refreshUploadStatusByDate();
+}
+
+function renderBookingCalendar() {
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const year = bookingCalendarDate.getFullYear();
+  const month = bookingCalendarDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  calendarGrid.innerHTML = "";
+  dayLabels.forEach(label => {
+    const dayName = document.createElement("div");
+    dayName.className = "calendar-day-name";
+    dayName.textContent = label;
+    calendarGrid.appendChild(dayName);
+  });
+
+  for (let i = 0; i < firstDay; i++) {
+    const empty = document.createElement("div");
+    empty.className = "calendar-cell empty";
+    calendarGrid.appendChild(empty);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(year, month, d);
+    const dateKey = formatDateYMD(dateObj);
+    const data = bookingMonthData[dateKey] || {};
+    const hasDome1 = isDomeMarkedBooked(data, "dome1");
+    const hasDome2 = isDomeMarkedBooked(data, "dome2");
+    const dome1Ranges = (bookingRangeVisualMap.dome1 && bookingRangeVisualMap.dome1[dateKey]) || [];
+    const dome2Ranges = (bookingRangeVisualMap.dome2 && bookingRangeVisualMap.dome2[dateKey]) || [];
+    const showDome1Range = dome1Ranges.length > 0;
+    const showDome2Range = dome2Ranges.length > 0;
+    const dome1RangesHtml = dome1Ranges.map((seg) => `<span class="calendar-badge range ${seg}">Dome 1 booked</span>`).join("");
+    const dome2RangesHtml = dome2Ranges.map((seg) => `<span class="calendar-badge range ${seg}">Dome 2 booked</span>`).join("");
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "calendar-cell";
+    if (selectedBookingDate === dateKey) cell.classList.add("selected");
+
+    cell.innerHTML = `
+      <div class="date-num">${d}</div>
+      <div class="calendar-status">
+        ${showDome1Range ? dome1RangesHtml : (hasDome1 ? '<span class="calendar-badge">Dome 1 booked</span>' : "")}
+        ${showDome2Range ? dome2RangesHtml : (hasDome2 ? '<span class="calendar-badge">Dome 2 booked</span>' : "")}
+      </div>
+    `;
+
+    cell.addEventListener("click", () => {
+      selectedBookingDate = dateKey;
+      bookingDateInput.value = formatDateDisplay(dateKey);
+      renderBookingCalendar();
+      refreshUploadStatusByDate();
+      openBookingModal();
+    });
+    calendarGrid.appendChild(cell);
+  }
+}
+
+function openBookingModal() {
+  if (selectedBookingDate) {
+    bookingDateInput.value = formatDateDisplay(selectedBookingDate);
+  }
+  bookingModal.classList.add("open");
+}
+
+function normalizePlatformValue(value) {
+  const raw = (value || "").trim().toLowerCase();
+  if (!raw) return "";
+  if (raw === "bookings.com") return "Bookings.com";
+  if (raw === "agoda") return "Agoda";
+  if (raw === "aribnb" || raw === "airbnb") return "Airbnb";
+  if (raw === "offline") return "Offline";
+  return value;
+}
+
+function closeBookingModal() {
+  bookingModal.classList.remove("open");
+  bookingScreenshotDome1Input.value = "";
+  bookingScreenshotDome2Input.value = "";
+  bookingCheckoutDateDome1Input.value = "";
+  bookingCheckoutDateDome2Input.value = "";
+}
+
+function openImageLightbox(imageUrl, label) {
+  imageLightboxImg.src = imageUrl;
+  imageLightboxImg.alt = label || "Preview";
+  imageLightbox.classList.add("open");
+}
+
+function closeImageLightbox() {
+  imageLightbox.classList.remove("open");
+  imageLightboxImg.src = "";
+}
+
+function isPdfAsset(url, storagePath, mimeType) {
+  const safeMime = (mimeType || "").toLowerCase();
+  if (safeMime === "application/pdf") return true;
+
+  const source = `${url || ""} ${storagePath || ""}`.toLowerCase();
+  return source.includes(".pdf");
+}
+
+function renderPreviewToggle(container, fileUrl, label, isPdf) {
+  if (!fileUrl) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const buttonLabel = isPdf ? "Click to View PDF" : "Click to View";
+  container.innerHTML = `
+    <button type="button" class="view-photo-btn">${buttonLabel}</button>
+  `;
+
+  const btn = container.querySelector(".view-photo-btn");
+  btn.addEventListener("click", () => {
+    if (isPdf) {
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    openImageLightbox(fileUrl, label);
+  });
+}
+
+function toAmountNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function formatAmountValue(value) {
+  const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+  return `${rounded}`;
+}
+
+function updateBalanceAmounts() {
+  const dome1Total = toAmountNumber(dome1TotalAmountInput.value);
+  const dome1Advance = toAmountNumber(dome1AmountPaidInput.value);
+  dome1BalanceAmountInput.value = formatAmountValue(dome1Total - dome1Advance);
+
+  const dome2Total = toAmountNumber(dome2TotalAmountInput.value);
+  const dome2Advance = toAmountNumber(dome2AmountPaidInput.value);
+  dome2BalanceAmountInput.value = formatAmountValue(dome2Total - dome2Advance);
+}
+
+async function isDateBlockedForDomeUpload(targetDate, domeKey) {
+  if (!targetDate || !domeKey) return false;
+  try {
+    const snapshot = await db
+      .collection("booking_screenshots")
+      .where("date", "<=", targetDate)
+      .get();
+
+    let blocked = false;
+    snapshot.forEach((doc) => {
+      if (blocked) return;
+      const data = doc.data() || {};
+      const checkIn = data.date || "";
+      const hasDome = isDomeMarkedBooked(data, domeKey);
+      const checkOut = domeKey === "dome1"
+        ? (data.checkoutDateDome1 || data.checkoutDate || "")
+        : (data.checkoutDateDome2 || data.checkoutDate || "");
+
+      if (!hasDome || !checkIn || !checkOut || checkOut <= checkIn) return;
+
+      // Block only nights inside an existing stay (checkout day remains allowed).
+      if (checkIn < targetDate && targetDate < checkOut) {
+        blocked = true;
+      }
+    });
+
+    return blocked;
+  } catch (err) {
+    console.error(`Error checking ${domeKey} overlap:`, err);
+    return false;
+  }
+}
+
+async function refreshUploadStatusByDate() {
+  const date = getActiveBookingDate();
+  dome1UploadStatus.textContent = "";
+  dome2UploadStatus.textContent = "";
+  dome1NameInput.value = "";
+  dome2NameInput.value = "";
+  dome1PlatformInput.value = "";
+  dome2PlatformInput.value = "";
+  dome1PhoneInput.value = "";
+  dome2PhoneInput.value = "";
+  dome1NotesInput.value = "";
+  dome2NotesInput.value = "";
+  dome1TotalAmountInput.value = "";
+  dome1AmountPaidInput.value = "";
+  dome1BalanceAmountInput.value = "0";
+  dome2TotalAmountInput.value = "";
+  dome2AmountPaidInput.value = "";
+  dome2BalanceAmountInput.value = "0";
+  bookingCheckoutDateDome1Input.value = "";
+  bookingCheckoutDateDome2Input.value = "";
+  dome1Preview.innerHTML = "";
+  dome2Preview.innerHTML = "";
+  bookingScreenshotDome1Input.disabled = false;
+  bookingScreenshotDome2Input.disabled = false;
+  deleteDome1Btn.disabled = true;
+  deleteDome2Btn.disabled = true;
+
+  if (!date) return;
+
+  try {
+    const blockedForDome1 = await isDateBlockedForDomeUpload(date, "dome1");
+    const blockedForDome2 = await isDateBlockedForDomeUpload(date, "dome2");
+
+    if (blockedForDome1) {
+      bookingScreenshotDome1Input.disabled = true;
+      bookingScreenshotDome1Input.value = "";
+      if (!dome1UploadStatus.textContent) {
+        dome1UploadStatus.textContent = "Date is already within an active Dome1 booking.";
+      }
+    }
+
+    if (blockedForDome2) {
+      bookingScreenshotDome2Input.disabled = true;
+      bookingScreenshotDome2Input.value = "";
+      if (!dome2UploadStatus.textContent) {
+        dome2UploadStatus.textContent = "Date is already within an active Dome2 booking.";
+      }
+    }
+
+    const doc = await db.collection("booking_screenshots").doc(date).get();
+    if (doc.exists) {
+      const data = doc.data() || {};
+      const dome1Booked = isDomeMarkedBooked(data, "dome1");
+      const dome2Booked = isDomeMarkedBooked(data, "dome2");
+      if (data.dome1URL) {
+        dome1UploadStatus.textContent = "Already uploaded";
+        renderPreviewToggle(
+          dome1Preview,
+          data.dome1URL,
+          `Dome1 file for ${date}`,
+          isPdfAsset(data.dome1URL, data.dome1Path, data.dome1MimeType)
+        );
+        bookingScreenshotDome1Input.disabled = true;
+        bookingScreenshotDome1Input.value = "";
+      }
+      if (dome1Booked) deleteDome1Btn.disabled = false;
+      if (data.dome1Phone) {
+        dome1PhoneInput.value = data.dome1Phone;
+      }
+      if (data.dome1Name) {
+        dome1NameInput.value = data.dome1Name;
+      }
+      if (data.dome1Platform || data.dome1Source) {
+        dome1PlatformInput.value = normalizePlatformValue(data.dome1Platform || data.dome1Source);
+      }
+      if (data.dome1Notes) {
+        dome1NotesInput.value = data.dome1Notes;
+      }
+      if (data.dome1TotalAmount !== undefined) {
+        dome1TotalAmountInput.value = data.dome1TotalAmount;
+      }
+      if (data.dome1AmountPaid !== undefined) {
+        dome1AmountPaidInput.value = data.dome1AmountPaid;
+      }
+      if (data.dome2URL) {
+        dome2UploadStatus.textContent = "Already uploaded";
+        renderPreviewToggle(
+          dome2Preview,
+          data.dome2URL,
+          `Dome2 file for ${date}`,
+          isPdfAsset(data.dome2URL, data.dome2Path, data.dome2MimeType)
+        );
+        bookingScreenshotDome2Input.disabled = true;
+        bookingScreenshotDome2Input.value = "";
+      }
+      if (dome2Booked) deleteDome2Btn.disabled = false;
+      if (data.dome2Phone) {
+        dome2PhoneInput.value = data.dome2Phone;
+      }
+      if (data.dome2Name) {
+        dome2NameInput.value = data.dome2Name;
+      }
+      if (data.dome2Platform || data.dome2Source) {
+        dome2PlatformInput.value = normalizePlatformValue(data.dome2Platform || data.dome2Source);
+      }
+      if (data.dome2Notes) {
+        dome2NotesInput.value = data.dome2Notes;
+      }
+      if (data.dome2TotalAmount !== undefined) {
+        dome2TotalAmountInput.value = data.dome2TotalAmount;
+      }
+      if (data.dome2AmountPaid !== undefined) {
+        dome2AmountPaidInput.value = data.dome2AmountPaid;
+      }
+      bookingCheckoutDateDome1Input.value = data.checkoutDateDome1 || data.checkoutDate || "";
+      bookingCheckoutDateDome2Input.value = data.checkoutDateDome2 || data.checkoutDate || "";
+      updateBalanceAmounts();
+    }
+  } catch (err) {
+    console.error("Error loading upload status:", err);
+  }
+}
+
+saveBookingBtn.addEventListener("click", async () => {
+  const date = getActiveBookingDate();
+  const dome1File = bookingScreenshotDome1Input.files && bookingScreenshotDome1Input.files[0];
+  const dome2File = bookingScreenshotDome2Input.files && bookingScreenshotDome2Input.files[0];
+  const dome1Platform = dome1PlatformInput.value.trim();
+  const dome2Platform = dome2PlatformInput.value.trim();
+  const dome1Name = dome1NameInput.value.trim();
+  const dome2Name = dome2NameInput.value.trim();
+  const dome1Phone = dome1PhoneInput.value.trim();
+  const dome2Phone = dome2PhoneInput.value.trim();
+  const dome1Notes = dome1NotesInput.value.trim();
+  const dome2Notes = dome2NotesInput.value.trim();
+  const dome1TotalAmount = dome1TotalAmountInput.value.trim();
+  const dome1AmountPaid = dome1AmountPaidInput.value.trim();
+  const dome1BalanceAmount = formatAmountValue(toAmountNumber(dome1TotalAmount) - toAmountNumber(dome1AmountPaid));
+  const dome2TotalAmount = dome2TotalAmountInput.value.trim();
+  const dome2AmountPaid = dome2AmountPaidInput.value.trim();
+  const dome2BalanceAmount = formatAmountValue(toAmountNumber(dome2TotalAmount) - toAmountNumber(dome2AmountPaid));
+  const checkoutDateDome1 = bookingCheckoutDateDome1Input.value;
+  const checkoutDateDome2 = bookingCheckoutDateDome2Input.value;
+
+  if (!date || (!dome1File && !dome2File && !dome1Platform && !dome2Platform && !dome1Name && !dome2Name && !dome1Phone && !dome2Phone && !dome1Notes && !dome2Notes && !dome1TotalAmount && !dome1AmountPaid && !dome2TotalAmount && !dome2AmountPaid && !checkoutDateDome1 && !checkoutDateDome2)) {
+    alert("Please click a date and add at least one value.");
+    return;
+  }
+
+  if (checkoutDateDome1 && checkoutDateDome1 <= date) {
+    alert("Dome 1 checkout date must be after selected date.");
+    return;
+  }
+
+  if (checkoutDateDome2 && checkoutDateDome2 <= date) {
+    alert("Dome 2 checkout date must be after selected date.");
+    return;
+  }
+
+  try {
+    const existingDocRef = db.collection("booking_screenshots").doc(date);
+    const existingDocSnap = await existingDocRef.get();
+    const existingData = existingDocSnap.exists ? (existingDocSnap.data() || {}) : {};
+
+    if (dome1File && existingData.dome1URL) {
+      alert("Dome1 screenshot already exists for this date. Delete Dome1 screenshot first to upload again.");
+      return;
+    }
+
+    if (dome2File && existingData.dome2URL) {
+      alert("Dome2 screenshot already exists for this date. Delete Dome2 screenshot first to upload again.");
+      return;
+    }
+
+    if (dome1File) {
+      const blockedForDome1 = await isDateBlockedForDomeUpload(date, "dome1");
+      if (blockedForDome1) {
+        alert("Dome1 is already booked for this date range. You cannot upload Dome1 on this date.");
+        return;
+      }
+    }
+
+    if (dome2File) {
+      const blockedForDome2 = await isDateBlockedForDomeUpload(date, "dome2");
+      if (blockedForDome2) {
+        alert("Dome2 is already booked for this date range. You cannot upload Dome2 on this date.");
+        return;
+      }
+    }
+
+    const payload = {
+      date,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (dome1File) {
+      const ext1 = (dome1File.name.split(".").pop() || "jpg").toLowerCase();
+      const dome1Path = `booking_screenshots/${date}_dome1.${ext1}`;
+      const dome1Ref = storage.ref(dome1Path);
+      await dome1Ref.put(dome1File);
+      payload.dome1URL = await dome1Ref.getDownloadURL();
+      payload.dome1Path = dome1Path;
+      payload.dome1MimeType = dome1File.type || "";
+    }
+
+    if (dome2File) {
+      const ext2 = (dome2File.name.split(".").pop() || "jpg").toLowerCase();
+      const dome2Path = `booking_screenshots/${date}_dome2.${ext2}`;
+      const dome2Ref = storage.ref(dome2Path);
+      await dome2Ref.put(dome2File);
+      payload.dome2URL = await dome2Ref.getDownloadURL();
+      payload.dome2Path = dome2Path;
+      payload.dome2MimeType = dome2File.type || "";
+    }
+
+    payload.dome1Name = dome1Name;
+    payload.dome2Name = dome2Name;
+    payload.dome1Phone = dome1Phone;
+    payload.dome2Phone = dome2Phone;
+    payload.dome1Platform = dome1Platform;
+    payload.dome2Platform = dome2Platform;
+    payload.dome1Notes = dome1Notes;
+    payload.dome2Notes = dome2Notes;
+    payload.dome1TotalAmount = dome1TotalAmount || "";
+    payload.dome1AmountPaid = dome1AmountPaid || "";
+    payload.dome1BalanceAmount = dome1BalanceAmount || "";
+    payload.dome2TotalAmount = dome2TotalAmount || "";
+    payload.dome2AmountPaid = dome2AmountPaid || "";
+    payload.dome2BalanceAmount = dome2BalanceAmount || "";
+    // Legacy single checkout field is deprecated; keep per-dome fields only.
+    payload.checkoutDate = firebase.firestore.FieldValue.delete();
+    payload.checkoutDateDome1 = checkoutDateDome1 || firebase.firestore.FieldValue.delete();
+    payload.checkoutDateDome2 = checkoutDateDome2 || firebase.firestore.FieldValue.delete();
+
+    await db.collection("booking_screenshots").doc(date).set(payload, { merge: true });
+
+    bookingScreenshotDome1Input.value = "";
+    bookingScreenshotDome2Input.value = "";
+    alert("Upload successfully");
+    await loadBookingCalendarMonth();
+    refreshUploadStatusByDate();
+    closeBookingModal();
+  } catch (err) {
+    console.error("Error uploading screenshot:", err);
+    alert("Error uploading screenshot: " + err.message);
+  }
+});
+
+async function deleteBookingScreenshot(docId, storagePath, room) {
+  if (!docId) return;
+  if (!room) return;
+  if (!confirm(`Delete ${room} screenshot for the selected date?`)) return;
+
+  try {
+    if (storagePath) {
+      await storage.ref(storagePath).delete();
+    }
+  } catch (storageErr) {
+    console.warn("Storage delete warning:", storageErr);
+  }
+
+  try {
+    const currentDoc = await db.collection("booking_screenshots").doc(docId).get();
+    const currentData = currentDoc.exists ? (currentDoc.data() || {}) : {};
+    const shouldDeleteLegacyCheckout = room === "dome1"
+      ? (!currentData.dome2URL && !currentData.checkoutDateDome2)
+      : (!currentData.dome1URL && !currentData.checkoutDateDome1);
+
+    const updatePayload = room === "dome1"
+      ? {
+          dome1URL: firebase.firestore.FieldValue.delete(),
+          dome1Path: firebase.firestore.FieldValue.delete(),
+          dome1MimeType: firebase.firestore.FieldValue.delete(),
+          dome1Name: firebase.firestore.FieldValue.delete(),
+          dome1Phone: firebase.firestore.FieldValue.delete(),
+          dome1Source: firebase.firestore.FieldValue.delete(),
+          dome1Platform: firebase.firestore.FieldValue.delete(),
+          dome1Notes: firebase.firestore.FieldValue.delete(),
+          dome1TotalAmount: firebase.firestore.FieldValue.delete(),
+          dome1AmountPaid: firebase.firestore.FieldValue.delete(),
+          dome1BalanceAmount: firebase.firestore.FieldValue.delete(),
+          checkoutDateDome1: firebase.firestore.FieldValue.delete()
+        }
+      : {
+          dome2URL: firebase.firestore.FieldValue.delete(),
+          dome2Path: firebase.firestore.FieldValue.delete(),
+          dome2MimeType: firebase.firestore.FieldValue.delete(),
+          dome2Name: firebase.firestore.FieldValue.delete(),
+          dome2Phone: firebase.firestore.FieldValue.delete(),
+          dome2Source: firebase.firestore.FieldValue.delete(),
+          dome2Platform: firebase.firestore.FieldValue.delete(),
+          dome2Notes: firebase.firestore.FieldValue.delete(),
+          dome2TotalAmount: firebase.firestore.FieldValue.delete(),
+          dome2AmountPaid: firebase.firestore.FieldValue.delete(),
+          dome2BalanceAmount: firebase.firestore.FieldValue.delete(),
+          checkoutDateDome2: firebase.firestore.FieldValue.delete()
+        };
+
+    if (shouldDeleteLegacyCheckout) {
+      updatePayload.checkoutDate = firebase.firestore.FieldValue.delete();
+    }
+
+    await db.collection("booking_screenshots").doc(docId).set(updatePayload, { merge: true });
+    alert("Screenshot deleted.");
+    await loadBookingCalendarMonth();
+    refreshUploadStatusByDate();
+    closeBookingModal();
+  } catch (err) {
+    console.error("Error deleting screenshot:", err);
+    alert("Error deleting screenshot: " + err.message);
+  }
+}
+
+prevMonthBtn.addEventListener("click", () => {
+  bookingCalendarDate = new Date(bookingCalendarDate.getFullYear(), bookingCalendarDate.getMonth() - 1, 1);
+  selectedBookingDate = "";
+  bookingDateInput.value = "";
+  loadBookingCalendarMonth();
+});
+
+nextMonthBtn.addEventListener("click", () => {
+  bookingCalendarDate = new Date(bookingCalendarDate.getFullYear(), bookingCalendarDate.getMonth() + 1, 1);
+  selectedBookingDate = "";
+  bookingDateInput.value = "";
+  loadBookingCalendarMonth();
+});
+
+deleteDome1Btn.addEventListener("click", async () => {
+  const date = getActiveBookingDate();
+  if (!date) return alert("Please click a date in the calendar first.");
+  const doc = await db.collection("booking_screenshots").doc(date).get();
+  const data = doc.exists ? (doc.data() || {}) : {};
+  if (!isDomeMarkedBooked(data, "dome1")) return alert("No Dome1 booking found for this date.");
+  await deleteBookingScreenshot(date, data.dome1Path || "", "dome1");
+});
+
+deleteDome2Btn.addEventListener("click", async () => {
+  const date = getActiveBookingDate();
+  if (!date) return alert("Please click a date in the calendar first.");
+  const doc = await db.collection("booking_screenshots").doc(date).get();
+  const data = doc.exists ? (doc.data() || {}) : {};
+  if (!isDomeMarkedBooked(data, "dome2")) return alert("No Dome2 booking found for this date.");
+  await deleteBookingScreenshot(date, data.dome2Path || "", "dome2");
+});
+
+dome1TotalAmountInput.addEventListener("input", updateBalanceAmounts);
+dome1AmountPaidInput.addEventListener("input", updateBalanceAmounts);
+dome2TotalAmountInput.addEventListener("input", updateBalanceAmounts);
+dome2AmountPaidInput.addEventListener("input", updateBalanceAmounts);
+
+closeBookingModalBtn.addEventListener("click", closeBookingModal);
+bookingModal.addEventListener("click", (e) => {
+  if (e.target === bookingModal) closeBookingModal();
+});
+
+imageLightboxClose.addEventListener("click", closeImageLightbox);
+imageLightbox.addEventListener("click", (e) => {
+  if (e.target === imageLightbox) closeImageLightbox();
+});
+
+// ===== Date Filter for Cleaning Photos =====
+document.addEventListener('DOMContentLoaded', () => {
+  const dateFilter = document.getElementById('dateFilter');
+  const clearFilterBtn = document.getElementById('clearFilterBtn');
+
+  if (dateFilter) {
+    dateFilter.addEventListener('change', (e) => {
+      const selectedDate = e.target.value;
+      if (selectedDate) {
+        loadCleaningPhotos(selectedDate);
+      } else {
+        loadCleaningPhotos(); // Load all photos if no date selected
+      }
+    });
+  }
+
+  if (clearFilterBtn) {
+    clearFilterBtn.addEventListener('click', () => {
+      dateFilter.value = '';
+      loadCleaningPhotos(); // Load all photos
+    });
+  }
+
+  if (bookingDateInput) {
+    const today = new Date();
+    selectedBookingDate = formatDateYMD(today);
+    bookingCalendarDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    bookingDateInput.value = formatDateDisplay(selectedBookingDate);
+    refreshUploadStatusByDate();
+  }
+});
+
+</script>
+
+</body>
+</html>
+
+
+
